@@ -23,7 +23,7 @@ router.post('/upload', async (req, res) => {
   }
 
   // get data from request body
-  const workers = await csv().fromString(file.data.toString());
+  let workers = await csv().fromString(file.data.toString());
 
   // validate csv data if need
   let errors = [];
@@ -39,22 +39,40 @@ router.post('/upload', async (req, res) => {
     return res.status(400).json({ errors });
   }
 
-  // change object keys to same as DB entities
-  workers.map(worker => {
-    delete Object.assign(worker, { ['user_name']: worker['userName'] })[
-      'userName'
-    ];
-    delete Object.assign(worker, { ['first_name']: worker['firstName'] })[
-      'firstName'
-    ];
-    delete Object.assign(worker, { ['last_name']: worker['lastName'] })[
-      'lastName'
-    ];
+  // change csv file header fields to same as DB entities
+  let handledWorkers = [];
+  workers.forEach(worker => {
+    const user_name = Object.keys(worker)[0];
+    const first_name = Object.keys(worker)[1];
+    const last_name = Object.keys(worker)[2];
+    const age = Object.keys(worker)[3];
+
+    let firstPair = { ['user_name']: worker[user_name] };
+    let secondPair = { ['first_name']: worker[first_name] };
+    let thirdPair = { ['last_name']: worker[last_name] };
+    let fourthPair = { ['age']: worker[age] };
+    if (
+      'user_name' !== user_name ||
+      'first_name' !== first_name ||
+      'last_name' !== last_name ||
+      'age' !== age
+    ) {
+      worker = {
+        ...firstPair,
+        ...secondPair,
+        ...thirdPair,
+        ...fourthPair
+      };
+    } else {
+      worker;
+    }
+
+    handledWorkers.push(worker);
   });
 
   // process
   try {
-    await Worker.insertMany(workers);
+    await Worker.insertMany(handledWorkers);
     res.json({ msg: 'data has put in the MongoDB successfully' });
   } catch (err) {
     console.error(err.message);
