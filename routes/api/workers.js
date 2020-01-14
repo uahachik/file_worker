@@ -10,11 +10,16 @@ const router = express.Router();
 // @rout   POST api/workers/upload
 // @desc   Upload csv file and insert data to the DB
 router.post('/upload', async (req, res) => {
-  if (!req.files.file) {
-    return res.status(400).json({ msg: 'The file not found' });
+  if (!req.files) {
+    return res.status(400).json({ errors: 'The file not found' });
   }
 
   const file = req.files.file;
+
+  const ext = file.name.split('.').pop();
+  if (ext !== 'csv') {
+    return res.status(400).json({ errors: 'only CSV extension file allowed' });
+  }
 
   // get data from request body
   const workers = await csv().fromString(file.data.toString());
@@ -30,7 +35,7 @@ router.post('/upload', async (req, res) => {
   });
 
   if (errors.length) {
-    return res.json({ msg: errors });
+    return res.status(400).json({ errors });
   }
 
   // change object keys to same as DB entities
@@ -49,7 +54,7 @@ router.post('/upload', async (req, res) => {
   // process
   try {
     await Worker.insertMany(workers);
-    res.json({ msg: 'data stored in the MongoDB successfully' });
+    res.json({ msg: 'data has put in the MongoDB successfully' });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

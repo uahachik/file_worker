@@ -1,4 +1,4 @@
-<p align="center">
+<p>
   <img src="./images/2020-01-11 13_09_11-Understanding Streams in Node.js - NodeSource.png" width="600" alt="Understanding Streams in Node.">
   <h2>A practical code without anything extra.</h2>
   <h4>Test assignment</h4>

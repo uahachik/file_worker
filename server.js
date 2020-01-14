@@ -1,12 +1,16 @@
 const express = require('express');
-const connectDB = require('./config/db');
-
+const cors = require('cors');
 const fileUpload = require('express-fileupload');
+
+const connectDB = require('./config/db');
 
 const app = express();
 
 //Connect Database
 connectDB();
+
+// allow cross-origin
+app.use(cors());
 
 // enable files upload
 app.use(
