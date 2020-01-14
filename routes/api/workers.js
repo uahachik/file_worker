@@ -16,6 +16,7 @@ router.post('/upload', async (req, res) => {
 
   const file = req.files.file;
 
+  // check file extension
   const ext = file.name.split('.').pop();
   if (ext !== 'csv') {
     return res.status(400).json({ errors: 'only CSV extension file allowed' });
