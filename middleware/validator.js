@@ -1,7 +1,6 @@
 module.exports = function validateCsv(user) {
   for (let [key, value] of Object.entries(user)) {
     if (key !== 'age' && value === '') {
-      console.log(value);
       return `invalid ${key}`;
     } else if (
       key === 'age' &&
