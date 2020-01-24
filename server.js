@@ -22,10 +22,32 @@ app.use(
 
 // Define Routes
 app.use('/api/workers', require('./routes/api/workers'));
-app.use('/api/users', require('./routes/api/users'));
 
-app.get('/', (req, res) => res.send('API running'));
+const pid = process.pid;
 
 const PORT = process.env.PORT || 9000;
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+let count = 0;
+
+// Emit message from workers
+process.on('message', msg => {
+  const count = msg.count;
+  const { id } = msg;
+  // eslint-disable-next-line no-console
+  console.log(`Worker number ${id}! We have ${count} counts in cluster`);
+});
+
+app
+  .get('/', async (req, res) => {
+    res.write(`Handled by process ${pid}\n`);
+    res.end(`Users: ${count}`);
+  })
+  .listen(PORT, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Started process ${pid} on port ${PORT}`);
+  });
+
+// // test of restarting process
+// setTimeout(() => {
+//   process.exit(1);
+// }, Math.random() * 60000);

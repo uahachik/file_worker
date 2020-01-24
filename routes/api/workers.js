@@ -1,8 +1,9 @@
 const express = require('express');
 const csv = require('csvtojson');
 const { parseAsync } = require('json2csv');
+const Joi = require('joi');
 
-const validator = require('../../middleware/validator');
+// const validator = require('../../helpers/validator');
 const Worker = require('../../models/Worker');
 
 const router = express.Router();
@@ -25,16 +26,41 @@ router.post('/upload', async (req, res) => {
   // get data from request body
   let workers = await csv().fromString(file.data.toString());
 
-  // validate csv data if need
+  // validate csv data with a custom validator
   let errors = [];
-  workers.forEach((worker, i) => {
-    const userError = validator(worker);
-    if (userError) {
-      const error = `${userError} on row ${i + 1}`;
-      errors = [...errors, error];
-    }
+  // workers.forEach((worker, i) => {
+  //   const userError = validator(worker);
+  //   if (userError) {
+  //     const error = `${userError} on row ${i + 1}`;
+  //     errors = [...errors, error];
+  //   }
+  // });
+
+  // if (errors.length) {
+  //   return res.status(400).json({ errors });
+  // }
+
+  // validate csv data with Joi
+  const schema = Joi.object().keys({
+    userName: Joi.string().required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    age: Joi.number()
+      .integer()
+      .positive()
+      .min(1)
+      .max(120)
+      .required()
   });
 
+  workers.forEach((worker, i) => {
+    Joi.validate(worker, schema, function(err) {
+      if (err) {
+        const error = `${err} on row ${i + 1}`;
+        errors = [...errors, error];
+      }
+    });
+  });
   if (errors.length) {
     return res.status(400).json({ errors });
   }
@@ -51,6 +77,7 @@ router.post('/upload', async (req, res) => {
     let secondPair = { ['first_name']: worker[first_name] };
     let thirdPair = { ['last_name']: worker[last_name] };
     let fourthPair = { ['age']: worker[age] };
+    //change fields
     if (
       'user_name' !== user_name ||
       'first_name' !== first_name ||
@@ -67,13 +94,25 @@ router.post('/upload', async (req, res) => {
       worker;
     }
 
-    handledWorkers.push(worker);
+    worker = handledWorkers.push(worker);
   });
 
   // process
   try {
     await Worker.insertMany(handledWorkers);
     res.json({ msg: 'data has put in the MongoDB successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// @rout    GET api/workers
+// @desc    Get all users
+router.get('/', async (req, res) => {
+  try {
+    const users = await Worker.find();
+    res.json(users);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

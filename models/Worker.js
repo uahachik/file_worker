@@ -15,4 +15,5 @@ const WorkerSchema = new mongoose.Schema({
   }
 });
 
+// eslint-disable-next-line no-global-assign
 module.exports = Worker = mongoose.model('worker', WorkerSchema);

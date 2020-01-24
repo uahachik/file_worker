@@ -1,5 +1,5 @@
 const fetchUsers = async () => {
-  return fetch('http://localhost:9000/api/users').then(user =>
+  return fetch('http://localhost:9000/api/workers').then(user =>
     user.json().then(user => user.reverse())
   );
 };
